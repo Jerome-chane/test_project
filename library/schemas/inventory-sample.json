@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "kind": { "type": "string", "enum": [ "page-object", "step-definitions", "test", "fixture", "other" ] },
+    "platforms": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string", "enum": [ "shared", "web", "android", "ios", "mobile", "windows-desktop", "api", "other" ] } },
+    "pattern": { "type": "string", "enum": [ "element-properties", "locator-constants", "action-methods", "fluent-navigation", "component-composed", "other" ] },
+    "platformBranching": { "type": "string", "enum": [ "none", "runtime-if", "separate-classes", "shared-interface", "attribute-per-platform" ] },
+    "dataAccess": { "type": "string", "enum": [ "literals", "config", "injected-model", "data-builder", "none" ] },
+    "waitsInside": { "type": "boolean" },
+    "assertionsInside": { "type": "boolean" },
+    "frameworkCalls": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 80 } },
+    "observations": { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 200 } }
+  },
+  "required": [ "kind", "platforms", "pattern", "platformBranching", "dataAccess", "waitsInside", "assertionsInside", "frameworkCalls", "observations" ],
+  "additionalProperties": false
+}

@@ -1,0 +1,78 @@
+{
+  // brain — per-file knowledge notes in the brain-kit format, with INDEX.md, nightly review and orphan archiving.
+  // Output goes INTO the target repo (brain/ folder), hence allowWriteInsideTarget. Add brain/ to the repo's .gitignore
+  // unless you want the notes tracked.
+  "name": "brain",
+  "version": 1,
+  "description": "Knowledge note per source file (summary + facts) in brain-kit's header format, an INDEX.md per repo, a 10% nightly re-check and archiving of notes whose source disappeared.",
+  "extractors": [ "text", "csharp", "git" ],
+  "select": {
+    "include": [
+      "**/*.cs", "**/*.vb", "**/*.fs", "**/*.dart", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.py", "**/*.java", "**/*.kt", "**/*.go", "**/*.rs", "**/*.swift",
+      "**/*.feature", "**/*.csproj", "**/*.props", "**/*.md", "**/*.yml", "**/*.yaml", "**/appsettings*.json", "**/*.runsettings", "**/App.config", "**/*.ps1", "**/*.sh"
+    ],
+    "exclude": [
+      "**/bin/**", "**/obj/**", "**/node_modules/**", "**/.git/**", "**/.vs/**", "**/.idea/**", "**/packages/**", "**/TestResults/**", "**/dist/**", "**/build/**",
+      "brain/**", "**/*.lock", "**/package-lock.json", "**/*.min.*", "**/CHANGELOG*", "**/LICENSE*"
+    ],
+    "maxChars": 300000,
+    "skipGenerated": true,
+    "skipVendored": true
+  },
+  "budget": { "maxPromptChars": 40000, "fullFileMaxChars": 14000, "charsPerToken": 4.9 },
+  "routes": { "out": "{{target}}/brain" },
+  "allowWriteInsideTarget": true,
+  "vars": {
+    // Shown at the top of INDEX.md and inside every learn prompt. brain-kit's GOAL.md taught us that whatever
+    // reads the brain steers by this sentence, so keep it about the project, not about the brain.
+    "goal": "Understand this repository well enough to extend it safely: structure, responsibilities, conventions, known pitfalls."
+  },
+  "steps": [
+    {
+      "id": "learn",
+      "kind": "perFile",
+      "description": "One note per source file; re-learned when the file's hash or the prompt version changes.",
+      "prompt": "brain-learn",
+      "key": [ "hash", "promptVersion" ],
+      "filter": { "all": [ { "fact": "binary", "exists": false }, { "fact": "chars", "gte": 60 } ] },
+      "inputs": {
+        "code": true,
+        "facts": [ "relpath", "lang", "layer", "types", "bases", "members", "imports", "hooks", "testMarkers", "platformHints", "subclasses", "callers", "commits", "lastChange", "codeMode" ],
+        "neighbors": true,
+        "previous": true
+      },
+      "ground": { "fields": [ "related" ], "against": [ "types", "members", "imports", "bases", "subclasses", "callers" ], "onMiss": "drop" },
+      "writers": [
+        { "template": "brain-knowledge", "route": "{{routes.out}}/knowledge/files/{{file.relpath}}.md", "format": "md" }
+      ],
+      "retries": 1
+    },
+    {
+      "id": "index",
+      "kind": "index",
+      "description": "INDEX.md and one index per top-level folder, rebuilt from the records (never by the model).",
+      "from": "learn",
+      "groupBy": "facts.folder",
+      "writers": [
+        { "template": "brain-index", "route": "{{routes.out}}/INDEX.md", "format": "md" },
+        { "template": "brain-goal", "route": "{{routes.out}}/GOAL.md", "format": "md" }
+      ]
+    },
+    {
+      "id": "review",
+      "kind": "review",
+      "description": "Re-check a sample of notes against the current source; disagreements are flagged, not rewritten.",
+      "from": "learn",
+      "prompt": "brain-review",
+      "sampleRate": 0.1,
+      "minDays": 7,
+      "inputs": { "code": true, "facts": [ "relpath", "lang", "types", "members" ], "neighbors": false }
+    },
+    {
+      "id": "archive",
+      "kind": "archive",
+      "description": "Notes whose source file no longer exists move to brain/_archive/<date>/.",
+      "from": "learn"
+    }
+  ]
+}

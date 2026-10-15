@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "summary": { "type": "string", "minLength": 10, "maxLength": 200 },
+    "facts": { "type": "array", "minItems": 3, "maxItems": 20, "items": { "type": "string", "minLength": 10, "maxLength": 240 } },
+    "tags": { "type": "array", "minItems": 1, "maxItems": 6, "items": { "type": "string", "maxLength": 24 } },
+    "related": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 120 } },
+    "concerns": { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 200 } }
+  },
+  "required": [ "summary", "facts", "tags", "related", "concerns" ],
+  "additionalProperties": false
+}

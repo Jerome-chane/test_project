@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "summary": { "type": "string", "minLength": 10, "maxLength": 200 },
+    "capabilities": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "pattern": "^([A-Z]+(\\.[A-Z]+)?|OTHER:[A-Za-z0-9_-]{2,30})$" },
+          "platforms": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string", "enum": [ "shared", "web", "android", "ios", "mobile", "windows-desktop", "api", "other" ] } },
+          "role": { "type": "string", "enum": [ "implements", "extends", "configures", "uses" ] },
+          "mechanism": { "type": "string", "minLength": 10, "maxLength": 200 },
+          "evidence": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string", "maxLength": 120 } },
+          "configKeys": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 80 } },
+          "external": { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 40 } },
+          "notable": { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 200 } },
+          "concerns": { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 200 } }
+        },
+        "required": [ "id", "platforms", "role", "mechanism", "evidence", "configKeys", "external", "notable", "concerns" ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [ "summary", "capabilities" ],
+  "additionalProperties": false
+}

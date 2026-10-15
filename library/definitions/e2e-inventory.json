@@ -1,0 +1,104 @@
+{
+  // e2e-inventory — what each end-to-end automation framework does, in a fixed vocabulary (taxonomy e2e-v0),
+  // so several frameworks can be compared capability by capability before designing one shared core.
+  // Facts (packages, types, calls, locators, markers) come from the extractors; the model only classifies
+  // infrastructure files and describes samples. Outputs are markdown under {{data}}/analysis/<alias>/ — outside any repo.
+  "name": "e2e-inventory",
+  "version": 1,
+  "description": "Capability inventory of an e2e automation framework: repo stack facts, one record per infrastructure file, sampled page objects and tests, one cell per capability, a matrix and an export draft without names or paths.",
+  "extractors": [ "text", "csharp", "git", "projects" ],
+  "taxonomy": "e2e-v0",
+  "select": {
+    "include": [
+      "**/*.cs", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.java", "**/*.kt", "**/*.py", "**/*.feature",
+      "**/*.csproj", "**/*.props", "**/Directory.*.props", "**/appsettings*.json", "**/*.runsettings", "**/App.config", "**/Web.config", "**/*.yml", "**/*.yaml", "**/*.json",
+      "**/package.json", "**/pom.xml", "**/build.gradle", "**/requirements.txt", "**/README*", "**/Jenkinsfile"
+    ],
+    "exclude": [
+      "**/bin/**", "**/obj/**", "**/node_modules/**", "**/.git/**", "**/.vs/**", "**/.idea/**", "**/packages/**", "**/TestResults/**", "**/dist/**", "**/build/**",
+      "**/*.lock", "**/package-lock.json", "**/*.min.*", "**/launchSettings.json", "**/*.Designer.cs", "**/*.feature.cs"
+    ],
+    "maxChars": 300000,
+    "skipGenerated": true,
+    "skipVendored": true
+  },
+  "budget": { "maxPromptChars": 44000, "fullFileMaxChars": 12000, "charsPerToken": 4.9 },
+  "routes": { "out": "{{data}}/analysis/{{repo.alias}}" },
+  "allowWriteInsideTarget": false,
+  "vars": {
+    "purpose": "This repository is one of several sources for a new shared test-automation core. Describe what it does and how; do not propose refactors of this repository."
+  },
+  "steps": [
+    {
+      "id": "facts",
+      "kind": "index",
+      "description": "Deterministic stack sheet: frameworks, packages, runners, BDD, locator kinds, hot files, config keys. No model.",
+      "writers": [ { "template": "inventory-facts", "route": "{{routes.out}}/facts.md", "format": "md" } ]
+    },
+    {
+      "id": "capabilities",
+      "kind": "perFile",
+      "description": "Infrastructure files only (inheritance, callers, hooks, driver creation): which capabilities each implements, with evidence.",
+      "prompt": "inventory-capabilities",
+      "key": [ "hash", "promptVersion", "taxonomyVersion" ],
+      "filter": {
+        "all": [ { "fact": "binary", "exists": false }, { "fact": "lang", "in": [ "csharp", "typescript", "javascript", "java", "kotlin", "python" ] }, { "fact": "layer", "in": [ "core", "other" ] } ],
+        "any": [ { "fact": "infraScore", "gte": 3 }, { "fact": "hooks", "gte": 1 }, { "fact": "markers.driverCreation", "gte": 1 }, { "fact": "subclassCount", "gte": 3 }, { "fact": "callerFiles", "gte": 5 } ]
+      },
+      "inputs": {
+        "code": true,
+        "facts": [ "relpath", "lang", "layer", "types", "bases", "members", "imports", "hooks", "attributes", "platformHints", "subclasses", "callers", "locators", "markers", "infraScore", "codeMode" ],
+        "neighbors": true,
+        "taxonomy": true
+      },
+      "ground": { "fields": [ "capabilities[].evidence" ], "against": [ "members", "types" ], "onMiss": "reject" },
+      "writers": [ { "template": "inventory-capability", "route": "{{routes.out}}/capabilities/{{file.relpath}}.md", "format": "md" } ],
+      "retries": 1
+    },
+    {
+      "id": "samples",
+      "kind": "perFile",
+      "description": "A few page objects and tests per platform: how they are written today.",
+      "prompt": "inventory-sample",
+      "key": [ "hash", "promptVersion", "taxonomyVersion" ],
+      "filter": { "all": [ { "fact": "binary", "exists": false }, { "fact": "layer", "in": [ "page-object", "test" ] }, { "fact": "chars", "gte": 300 } ] },
+      "sample": { "per": "platformHints", "count": 3 },
+      "inputs": { "code": true, "facts": [ "relpath", "lang", "layer", "types", "bases", "members", "locators", "markers", "platformHints", "codeMode" ], "neighbors": true, "taxonomy": true },
+      "ground": { "fields": [ "frameworkCalls" ], "against": [ "calls", "members", "bases" ], "onMiss": "drop" },
+      "writers": [ { "template": "inventory-sample", "route": "{{routes.out}}/samples/{{file.relpath}}.md", "format": "md" } ],
+      "retries": 1
+    },
+    {
+      "id": "cells",
+      "kind": "aggregate",
+      "description": "One cell per capability: the files that implement it (script) plus a short description of the approach (model).",
+      "from": "capabilities",
+      "groupBy": "result.capabilities[].id",
+      "prompt": "inventory-cell",
+      "key": [ "hash", "promptVersion", "taxonomyVersion" ],
+      "inputs": { "taxonomy": true },
+      "writers": [ { "template": "inventory-cell", "route": "{{routes.out}}/cells/{{slug group.key}}.md", "format": "md" } ],
+      "retries": 1
+    },
+    {
+      "id": "matrix",
+      "kind": "index",
+      "description": "Capability × files matrix for this repo, plus the export draft (aliases, ids and counts only).",
+      "from": "cells",
+      "writers": [
+        { "template": "inventory-matrix", "route": "{{routes.out}}/matrix.md", "format": "md" },
+        { "template": "inventory-export", "route": "{{routes.out}}/export-draft.md", "format": "md" }
+      ]
+    },
+    {
+      "id": "review",
+      "kind": "review",
+      "description": "Re-check 10% of capability records against the source.",
+      "from": "capabilities",
+      "prompt": "inventory-review",
+      "sampleRate": 0.1,
+      "minDays": 7,
+      "inputs": { "code": true, "facts": [ "relpath", "lang", "types", "members" ], "neighbors": false, "taxonomy": true }
+    }
+  ]
+}

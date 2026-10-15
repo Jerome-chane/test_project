@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "approach": { "type": "string", "minLength": 20, "maxLength": 400 },
+    "strengths": { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 200 } },
+    "weaknesses": { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 200 } },
+    "completeness": { "type": "string", "enum": [ "full", "partial", "minimal", "absent" ] }
+  },
+  "required": [ "approach", "strengths", "weaknesses", "completeness" ],
+  "additionalProperties": false
+}

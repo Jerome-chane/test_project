@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "properties": {
+    "agree": { "type": "boolean" },
+    "issues": { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 200 } },
+    "note": { "type": "string", "maxLength": 200 }
+  },
+  "required": [ "agree", "issues", "note" ],
+  "additionalProperties": false
+}
