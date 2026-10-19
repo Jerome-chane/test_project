@@ -1,6 +1,6 @@
 ---
 name: testware-migration
-version: 2
+version: 3
 extractors: text, csharp, git, projects
 taxonomy: testware-v0
 allowWriteInsideTarget: no
@@ -125,7 +125,7 @@ Infrastructure and configuration files: which TestWare slot each lands in, with 
 ### Grounding
 
 - fields: slots[].evidence
-- against: members, types, configKeys
+- against: members, types, configKeys, references, calls
 - onMiss: reject
 
 ### Writers
