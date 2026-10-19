@@ -1,16 +1,16 @@
 ---
 name: migration-test
-version: 1
+version: 2
 answer: migration-test
 temperature: 0
-system: You describe how a test file is wired to its framework, so a new test base can provide the same services. You answer in markdown, in exactly the requested sections, and you never invent names that are not in the file.
+system: You describe what a test file tests and how it is wired to its framework, so the same tests can be written on a target core whose test base provides the wiring. You answer in markdown, in exactly the requested sections, and you never invent names that are not in the file.
 description: What one test file tests and how it is wired, so the same tests can be written on the target core.
 ---
 # Task
 
 {{vars.purpose}}
 
-Below is ONE test file. Its tests will be written again on the target core, where a test says which configured scope it runs in with an attribute, gets its engine started and stopped by a shared test base, and asks that base for pages. List what this file tests and what it relies on today.
+Below is ONE test file. Its tests will be written again on the target core, where a test class derives from a shared base, names the configured platforms it runs on with an attribute, and takes its pages, engines and services as parameters of the test method; the base starts the platform's engine before each test and stops it after. List what this file tests and what it relies on today.
 
 # Target core
 
@@ -25,8 +25,9 @@ Below is ONE test file. Its tests will be written again on the target core, wher
 - scenarios: one line per test method, `Name: what it checks`, in the file's order. Parameterised tests are one line naming the variation.
 - preconditions: what must already be true when a test starts, taken from setup code, attributes or the first steps.
 - bases and hooksUsed: names as written in the file.
-- scopeHint: the driver or environment configuration this file needs, in words: which browser, device, app, environment or API base.
-- needs: what the base class or hooks do for this file: start a driver, log in, seed data, take screenshots, retry, clean up. One per line.
+- platformHint: the driver or environment configuration this file needs, in words: which browser, device, app, environment or API base address (no values).
+- engine: the target engine that configuration maps to: selenium, playwright, appium, http, custom when nothing built in serves it, none when the file starts no driver.
+- needs: what the base class or hooks do for this file today: start a driver, log in, seed data, take screenshots, retry, clean up. One per line.
 - Do not review the tests. Describe the wiring.
 
 # Answer format

@@ -1,6 +1,6 @@
 ---
 name: migration-plan
-version: 1
+version: 2
 answer: migration-plan
 temperature: 0
 system: You write one slot of a migration plan from per-file mappings made earlier. You answer in markdown, in exactly the requested sections.
@@ -22,8 +22,8 @@ Slot **{{group.key}}** in repository **{{repo.alias}}**. Below are the per-file 
 
 # Rules
 
-- Work: ordered items a developer can start with, each naming the files or types involved. Reuse before adapt, adapt before rewrite.
-- Gap: yes only when a record says the target has no place for something the repository needs (disposition gap), or when every record would have to be dropped to fit.
+- Work: ordered items a developer can start with, each naming the files or types involved. Drop what the core already does before reusing, reuse before adapting, adapt before rewriting.
+- Gap: yes only when a record says the core has no place for something the repository still needs (disposition gap), or when every record would have to be dropped to fit.
 
 # Answer format
 

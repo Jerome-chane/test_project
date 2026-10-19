@@ -1,6 +1,6 @@
 ---
 name: testware-migration
-version: 1
+version: 2
 extractors: text, csharp, git, projects
 taxonomy: testware-v0
 allowWriteInsideTarget: no
@@ -8,9 +8,9 @@ allowWriteInsideTarget: no
 
 # testware-migration
 
-Everything needed to write the tests of an existing end-to-end framework again on the TestWare core, per source repository: stack facts, every page object with its actions and a draft page set per application (`PAGES.md`), every test file with its scenarios, data and preconditions (`TESTS.md`), and one mapping per infrastructure file saying which TestWare slot it lands in and what it does today (`slots/`: engines, configuration, reporters, steps, helpers). On top of that, one plan cell per slot and a per-repo map with gaps (`plan/`, `MIGRATION.md`) for when a full migration is planned; skip the steps `plan` and `map` in the job until then.
+Everything needed to write the tests of an existing end-to-end framework again on the TestWare core, per source repository: stack facts (`facts.md`), every page object with its actions and the `[Service]` class to write for it (`PAGES.md`), every test file with its scenarios, data, preconditions and the platform it needs (`TESTS.md`), every Gherkin feature with its scenarios (`FEATURES.md`), and one mapping per infrastructure file saying which TestWare slot it lands in and what it does today (`slots/`: platforms, engines, settings, steps, services, helpers). On top of that, one plan cell per slot and a per-repo map with gaps (`plan/`, `MIGRATION.md`), and a `HANDOFF.md` that says which files to give a capable model and which prompt turns them into a migration plan an agent can execute.
 
-Run it on each source repository with its own alias. Outputs go to `{{data}}/migration/<alias>/`, outside any repository. The per-repo outputs are then read by a capable model with the prompts in `docs/migration-unify.md`: the first prompt builds the test-authoring kit per repository, the second the cross-repository migration plan.
+Run it on each source repository with its own alias. Outputs go to `{{data}}/migration/<alias>/`, outside any repository. The local model works file by file; the synthesis is done by a capable model with the prompt in `HANDOFF.md` (also in `docs/migration-unify.md` of this project). The steps `plan` and `map` can be skipped in the job until a full migration is planned; the first-test plan does not need them.
 
 ## Routes
 
@@ -18,8 +18,8 @@ Run it on each source repository with its own alias. Outputs go to `{{data}}/mig
 
 ## Variables
 
-- purpose: This repository is one of several existing frameworks being merged into one shared core. Describe what it does and how it maps onto the core; do not propose refactors of this repository.
-- target: The target core is TestWare. A test project ships a TestConfig.json with named Scopes; each Scope has a ScopeName, a CoreName naming an engine kind, and a Config object with that engine's settings; CockpitScopes do the same for reporters. An Engine (ITestWareEngine) owns one driver or session, with Initialize, Dispose, CollectEvidence returning a screenshot path, and StartRecordingEvidences/StopRecordingEvidences; Selenium and Playwright engines exist. A Cockpit (ITestWareCockpit) is a reporter with Start/Stop for suite, case and step, and activities that attach files. Pages are engine-neutral interfaces with one implementation per engine, listed per application in a page set interface; tests ask for a page by its interface. A test marks its scope with [TestWareScopes("name")]; a shared test base starts the scope's engine before each test and disposes it after. Named steps with before/after/error hooks come from a StepChain. There is no slot yet for test data, HTTP or database helpers, retries, parallel runs, result merging, Appium server start-up or multiple sessions in one test.
+- purpose: This repository is one of several existing end-to-end test frameworks whose tests will be written again on one shared core. Describe what the file does and how it maps onto the core; do not propose refactors of this repository.
+- target: The target core is TestWare, a .NET 8 library for NUnit 4 and MSTest 4. Where a test runs is a platform, a named entry in testware.json with an Engine (Selenium, Playwright, Http or Appium, or a custom engine class marked [Engine]) and that engine's settings (BaseUrl, Browser, Headless, RemoteUrl, Os, DeviceName, App, Headers, Lifetime); environments add testware.<Environment>.json, and any key can be overridden by a TESTWARE__ environment variable. A page is a class marked [Service] whose constructor takes one engine interface (ISeleniumEngine, IPlaywrightEngine, IHttpEngine, IAppiumEngine) and uses the engine's helpers (Find, Click, Type, IsVisible, IsGone, WaitUntil; Send for Http); the same page on several platforms is an interface with one implementation per platform, chosen with [Pages]. A service is a [Service] class without an engine (test users, data builders, clocks). A test class derives from TestWareFixture, names its platforms with [Platforms] or a [TestFixture] argument, and takes pages, engines and services as parameters of the test method; it can also call Page<T>(), Engine<T>(), Service<T>(), Settings<T>("Section"), Step("name", action) and OnCleanup(action). TestWare starts the engines before each test and stops them after, captures a screenshot or the last request and response when a test or a step fails and attaches them to the result, runs tests in parallel with one container scope per test, and checks the configuration at start-up. A Startup class (TestWareSetUpFixture in NUnit, TestWareStartup in MSTest) registers classes from other libraries in ConfigureServices. There is no slot for reporters, report portals, retries, Gherkin step definitions, or database and messaging helpers; those stay in the project or in the pipeline.
 
 ## Select
 
@@ -90,7 +90,7 @@ Deterministic stack sheet: frameworks, packages, runners, driver libraries, conf
 
 ## Step: slots
 
-Infrastructure and configuration files: which TestWare slot each lands in, with disposition, what to keep and what to change. The filter is wide on purpose: a missed engine or reporter costs more than a few TW.NONE records.
+Infrastructure and configuration files: which TestWare slot each lands in, with disposition, what to keep and what to change. The filter is wide on purpose: a missed driver factory or configuration file costs more than a few TW.NONE records.
 
 - kind: perFile
 - prompt: migration-slot
@@ -134,7 +134,7 @@ Infrastructure and configuration files: which TestWare slot each lands in, with 
 
 ## Step: pages
 
-Every page, screen or dialog object: application, actions, driver access, suggested interface name.
+Every page, screen, dialog or API client object: application, actions, driver access, the engine its TestWare class will take, suggested interface name.
 
 - kind: perFile
 - prompt: migration-page
@@ -166,7 +166,7 @@ Every page, screen or dialog object: application, actions, driver access, sugges
 
 ## Step: tests
 
-Every test file: its scenarios, pages, data, preconditions, sessions, and what it needs from the test base. Not sampled: these are the tests to write again.
+Every test file: its scenarios, pages, data, preconditions, sessions, the platform it needs, and what it relies on the test base for. Not sampled: these are the tests to write again.
 
 - kind: perFile
 - prompt: migration-test
@@ -197,9 +197,35 @@ Every test file: its scenarios, pages, data, preconditions, sessions, and what i
 
 - migration-test → `{{routes.out}}/tests/{{file.relpath}}.md`
 
+## Step: features
+
+Every Gherkin feature file: its scenarios, background, tags and the screens its steps mention. TestWare has no Gherkin runner, so these scenarios are written again as test methods.
+
+- kind: perFile
+- prompt: migration-feature
+- key: hash, promptVersion, taxonomyVersion
+- retries: 1
+
+### Filter: all
+
+- binary missing
+- lang = gherkin
+- chars >= 80
+
+### Inputs
+
+- code: yes
+- facts: relpath, lang, scenarios, steps, tags, codeMode
+- neighbors: no
+- taxonomy: yes
+
+### Writers
+
+- migration-feature → `{{routes.out}}/features/{{file.relpath}}.md`
+
 ## Step: plan
 
-One plan cell per slot: approach, ordered work, risks, gap (model), from the slot records.
+One plan cell per slot: approach, ordered work, risks, gap (model), from the slot records. Needed for a full migration, not for the first test.
 
 - kind: aggregate
 - prompt: migration-plan
@@ -231,7 +257,7 @@ The per-repo migration map: slot table with gaps, slots nobody claimed, stack su
 
 ## Step: pages-index
 
-Page list per application with a draft page set.
+Page list per application with the draft interface and the [Service] class to write for each page.
 
 - kind: index
 - from: pages
@@ -243,7 +269,7 @@ Page list per application with a draft page set.
 
 ## Step: tests-index
 
-Every test file with its scenarios, and what the test base must provide.
+Every test file with its scenarios, the platform the tests need, and what the test base must provide.
 
 - kind: index
 - from: tests
@@ -251,6 +277,29 @@ Every test file with its scenarios, and what the test base must provide.
 ### Writers
 
 - migration-tests-index → `{{routes.out}}/TESTS.md`
+
+## Step: features-index
+
+Every feature file with its scenarios, grouped by application.
+
+- kind: index
+- from: features
+- groupBy: `result.application`
+
+### Writers
+
+- migration-features-index → `{{routes.out}}/FEATURES.md`
+
+## Step: handoff
+
+The hand-off page for the capable model: which files of this folder and of the TestWare repository to attach, the test files to choose the first test from, and the prompt that turns them into a migration plan an agent can execute. Rebuilt from the test records; no model.
+
+- kind: index
+- from: tests
+
+### Writers
+
+- migration-handoff → `{{routes.out}}/HANDOFF.md`
 
 ## Step: review
 

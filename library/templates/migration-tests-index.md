@@ -1,11 +1,11 @@
 # Tests — {{repo.alias}}
 
-Rebuilt {{now}} from {{count}} test file record(s). The scenarios below are the tests to write again on the target core. Details per file in `tests/<path>.md`.
+Rebuilt {{now}} from {{count}} test file record(s). The scenarios below are the tests to write again on the target core. The first test to write is the one with one session, the fewest pages, no seeded data and no device. Details per file in `tests/<path>.md`.
 
-| Test file | Runner | Scenarios | Pages used | Sessions | Data | Scope needed |
-|---|---|---|---|---|---|---|
+| Test file | Runner | Scenarios | Pages used | Sessions | Data | Target engine | Platform needed |
+|---|---|---|---|---|---|---|---|
 {{#each records}}
-| [{{facts.name}}](tests/{{subject}}.md) | {{result.runner}} | {{count result.scenarios}} | {{join result.pagesUsed ", "}} | {{result.sessions}} | {{result.dataSource}} | {{truncate result.scopeHint 60}} |
+| [{{facts.name}}](tests/{{subject}}.md) | {{result.runner}} | {{count result.scenarios}} | {{join result.pagesUsed ", "}} | {{result.sessions}} | {{result.dataSource}} | {{result.engine}} | {{truncate result.platformHint 60}} |
 {{/each}}
 
 ## Scenarios

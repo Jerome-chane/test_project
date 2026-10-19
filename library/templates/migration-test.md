@@ -4,6 +4,7 @@ Repo: {{repo.alias}}
 Hash: {{file.hash}}
 Analysed: {{today}}
 Runner: {{result.runner}}
+Engine: {{result.engine}}
 Platforms: {{join result.platforms ", "}}
 Model: {{model}}
 ---
@@ -17,7 +18,8 @@ Model: {{model}}
 | Data source | {{result.dataSource}} |
 | Sessions per test | {{result.sessions}} |
 | Platforms | {{join result.platforms ", "}} |
-| Scope needed | {{result.scopeHint}} |
+| Platform needed | {{result.platformHint}} |
+| Target engine | {{result.engine}} |
 | Pages used | {{join result.pagesUsed ", "}} |
 
 ## Scenarios

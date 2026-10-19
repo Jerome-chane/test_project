@@ -1,6 +1,6 @@
 # Migration map — {{repo.alias}}
 
-Rebuilt {{now}} from {{count}} plan cell(s). One cell per target slot in `plan/<slot>.md`; per-file mappings in `slots/`; pages in `PAGES.md`; tests in `TESTS.md`; stack facts in `facts.md`.
+Rebuilt {{now}} from {{count}} plan cell(s). One cell per target slot in `plan/<slot>.md`; per-file mappings in `slots/`; pages in `PAGES.md`; tests in `TESTS.md`; features in `FEATURES.md`; stack facts in `facts.md`; the hand-off to a capable model in `HANDOFF.md`.
 
 Read the slot table first. A **gap** row means the core must gain something before that slot can be migrated; collect the gap rows of every repository before changing the core.
 
@@ -17,7 +17,7 @@ Read the slot table first. A **gap** row means the core must gain something befo
 
 {{join taxonomyUnused ", "}}
 
-Not a finding by itself: TW.PAGE and TW.TEST are inventoried in `PAGES.md` and `TESTS.md`, and a slot can be absent because the repository never needed it.
+Not a finding by itself: TW.PAGE, TW.TEST and TW.BDD are inventoried in `PAGES.md`, `TESTS.md` and `FEATURES.md`, and a slot can be absent because the repository never needed it.
 {{/if}}
 
 ## Stack (script)

@@ -5,6 +5,7 @@ Hash: {{file.hash}}
 Analysed: {{today}}
 Application: {{result.application}}
 Interface: {{result.interfaceName}}
+Engine: {{result.engine}}
 Platforms: {{join result.platforms ", "}}
 Model: {{model}}
 ---
@@ -13,9 +14,11 @@ Model: {{model}}
 | Aspect | Value |
 |---|---|
 | Application | {{result.application}} |
-| Page set property | `{{result.interfaceName}} {{result.pageName}} { get; }` |
+| Class to write | `[Service] {{result.pageName}}Page` with one engine interface in its constructor |
+| Engine | {{result.engine}} |
+| Interface (several platforms) | `{{result.interfaceName}}` |
 | Platforms | {{join result.platforms ", "}} |
-| Driver access | {{result.driverAccess}} |
+| Driver access today | {{result.driverAccess}} |
 | Locators in file | {{result.locatorsInline}} |
 | Waits inside | {{result.waitsInside}} |
 | Locator kinds (script) | {{pairs facts.locators}} |
