@@ -43,10 +43,10 @@ On the first start of 0.2, the old `.json` settings, repos, jobs and library cop
 
 1. **Settings**: check the Ollama URL and the default model (`qwen-coder`). If brain-kit's daemon still runs, add its `PAUSE` file under hold files, so the two never use Ollama at the same time.
 2. **Repos**: add each target folder with a neutral alias.
-3. **Jobs → New job**: pick a definition and the repos, then set the windows (`daily 23:00-06:00 nightly`, `fri 20:00 +58h weekend`).
+3. **Jobs → New job**: pick a definition and the repos. Give it windows on the **Schedule** page (or on the job page, one per line: `daily 23:00-06:00 nightly`, `fri 20:00 +58h weekend`).
 4. **Dry run**, then open the outputs under `AI_Analyst_data\dryrun\…`.
 5. **Run now** with *Max model calls per run* = 3. Check the run page: real token counts, valid answers, sensible files. If answers fail their checks, the run page shows them as the model wrote them, with the problems that were sent back.
-6. **Settings → Start automatically**: Startup folder or daily task. The schedule only opens windows while the app runs.
+6. **Schedule → Start automatically**: Startup folder entry or daily Windows task. The schedule only opens windows while the app runs.
 
 ## Clean up
 
@@ -60,7 +60,17 @@ Everything is controlled from the UI. **Stop job** and **Stop all** are in the t
 - **Stop all** ends this run and stops the schedule, so no other job starts by itself, even one whose window is open. The top bar shows *schedule stopped* until you click **Resume schedule** on the dashboard.
 - **Pause** holds the run at the next model call. **Continue** picks it up there. If the app closes while a run is paused, the schedule is stopped after the restart.
 - **Resume run** (dashboard, Jobs, run pages) starts a stopped or failed run again with the same options, inside its window if that window is still open. Finished units are reused, so it continues where it stopped.
-- **Stop schedule** / **Resume schedule** (dashboard and Jobs page): while the schedule is stopped, no scheduled window starts, and a run already active keeps going (use Stop all to end it too). **Run now** still works.
+- **Stop schedule** / **Resume schedule** (dashboard, Jobs and Schedule pages): while the schedule is stopped, no scheduled window starts, and a run already active keeps going (use Stop all to end it too). **Run now** still works.
 - Per job, in the Dashboard and Jobs lists: **Schedule off/on** (the windows are kept), **Skip this window** or **Skip next window** (with **Undo skip**), and **Disable/Enable** (a disabled job never starts).
 - These switches are saved in `AI_Analyst_data\control.md`, so a restart does not undo them. Use the buttons rather than editing the file. The `PAUSE` file of earlier versions is no longer read: if one is found at start-up, the schedule is stopped and the file is renamed `PAUSE.migrated`.
 - **Settings → Quit** closes the app. The active run ends; the schedule is not stopped and no window is skipped, so after a restart the run picks up again in its window.
+
+## The Schedule page
+
+Everything about *when* things run, in one place:
+
+- **Windows**: every job with its windows. **Add a window**, **Edit** or **Delete** one, turn a job's schedule off or on, skip its next window. A job's first window turns its schedule on; deleting its last window makes it manual only.
+- **Skipped windows**: each skip with **Undo skip**. Skips of jobs that were deleted or retired are dropped automatically.
+- **Start automatically (Windows)**: the real status of the daily Windows task `AI_Analyst` (read from Windows Task Scheduler: time, enabled, which exe and data folder it starts) and of the Startup folder entry, with buttons to create, update, disable/enable and remove them. Windows limits a task's command to 261 characters; with very long folder paths, use the Startup entry instead.
+
+To stop every automatic run for good: delete or turn off the windows (or **Stop schedule**), then remove the daily task and the Startup entry. Deleting a job alone does not remove the Windows task: the task only starts the app, and the app then finds nothing to run.
